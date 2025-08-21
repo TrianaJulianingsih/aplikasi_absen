@@ -29,15 +29,15 @@ class Kehadiran {
   }
 
   factory Kehadiran.fromMap(Map<String, dynamic> map) {
-    return Kehadiran(
-      idKehadiran: map['id_kehadiran'] as int,
-      userId: map['userId'],
-      nama: map['nama'] as String,
-      tanggal: map['tanggal'] as String,
-      kelas: map['kelas'] as String,
-      status: map['status'] as String,
-    );
-  }
+  return Kehadiran(
+    idKehadiran: map['id_kehadiran'] as int?,
+    userId: map['userId'] as int,
+    nama: map['nama'] as String,
+    tanggal: map['tanggal'] as String,
+    kelas: map['kelas'] as String,
+    status: map['status'] as String?,
+  );
+}
   
   String toJson() => json.encode(toMap());
 

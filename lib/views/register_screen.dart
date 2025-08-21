@@ -60,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Text(
                 "Register",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: "Gilroy_Medium"),
               ),
               height(24),
               buildTitle("Nama"),

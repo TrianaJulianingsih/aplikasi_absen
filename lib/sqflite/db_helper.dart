@@ -42,18 +42,28 @@ class DbHelper {
   // }
 
   static Future<void> registerKehadiran(Kehadiran kehadiran) async {
-    final db = await databaseHelper();
-    String? email = await PreferenceHandler.getEmail();
+  final db = await databaseHelper();
+  String? email = await PreferenceHandler.getEmail();
 
-    final data = kehadiran.toMap();
-    data['email'] = email; // simpan email user login
+  final data = kehadiran.toMap();
+  data['email'] = email;
 
+  // Jika idKehadiran ada, maka update, jika tidak insert baru
+  if (kehadiran.idKehadiran != null) {
+    await db.update(
+      'kehadiran',
+      data,
+      where: 'id_kehadiran = ?',
+      whereArgs: [kehadiran.idKehadiran],
+    );
+  } else {
     await db.insert(
       'kehadiran',
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+}
 
   static Future<User?> loginUser(String email, String password) async {
     final db = await databaseHelper();
@@ -81,6 +91,19 @@ class DbHelper {
     return results.map((e) => User.fromMap(e)).toList();
   }
 
+  static Future<User?> getUserById(int id) async {
+    final db = await databaseHelper();
+    final List<Map<String, dynamic>> results = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (results.isNotEmpty) {
+      return User.fromMap(results.first);
+    }
+    return null;
+  }
   // static Future<Kehadiran?> readKehadiran(String tanggal, String status) async {
   //   final db = await databaseHelper();
   //   final List<Map<String, dynamic>> results = await db.query(
@@ -129,15 +152,15 @@ class DbHelper {
     return results.map((e) => Kehadiran.fromMap(e)).toList();
   }
 
-static Future<List<Kehadiran>> getKehadiranByUserAndMonth(int userId, String bulan) async {
-  final db = await databaseHelper();
-  final List<Map<String, dynamic>> results = await db.query(
-    'kehadiran',
-    where: 'userId = ? AND substr(tanggal, 4, 2) = ?',
-    whereArgs: [userId, bulan],
-  );
-  return results.map((e) => Kehadiran.fromMap(e)).toList();
-}
+  static Future<List<Kehadiran>> getKehadiranByUserAndMonth(int userId, String bulan) async {
+    final db = await databaseHelper();
+    final List<Map<String, dynamic>> results = await db.query(
+      'kehadiran',
+      where: 'userId = ? AND substr(tanggal, 4, 2) = ?',
+      whereArgs: [userId, bulan],
+    );
+    return results.map((e) => Kehadiran.fromMap(e)).toList();
+  }
 
 
   static Future<void> updateUser(User user) async {
@@ -147,12 +170,34 @@ static Future<List<Kehadiran>> getKehadiranByUserAndMonth(int userId, String bul
       user.toMap(),
       where: 'id = ?',
       whereArgs: [user.id],
-      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  static Future<void> deletePeserta(int id) async {
-    final db = await databaseHelper();
-    await db.delete('murid', where: 'nomor_induk = ?', whereArgs: [id]);
-  }
+  // Ganti fungsi deletePeserta dengan fungsi deleteUser
+static Future<void> deleteUser(int id) async {
+  final db = await databaseHelper();
+  await db.delete('users', where: 'id = ?', whereArgs: [id]);
 }
+
+  // Tambahkan method-method berikut di class DbHelper
+
+static Future<void> updateKehadiran(Kehadiran kehadiran) async {
+  final db = await databaseHelper();
+  await db.update(
+    'kehadiran',
+    kehadiran.toMap(),
+    where: 'id_kehadiran = ?',
+    whereArgs: [kehadiran.idKehadiran],
+  );
+}
+
+static Future<void> deleteKehadiran(int id) async {
+  final db = await databaseHelper();
+  await db.delete(
+    'kehadiran',
+    where: 'id_kehadiran = ?',
+    whereArgs: [id],
+  );
+}
+}
+

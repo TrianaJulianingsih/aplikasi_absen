@@ -38,15 +38,15 @@ class _DrawerMenuState extends State<DrawerMenu> {
           DrawerHeader(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/peta.jpg'),
+                image: AssetImage('assets/images/logo_app.png'),
                 fit: BoxFit.cover,
               ),
             ),
             child: Text(
-              'Travel',
+              'MyAbsence',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: const Color.fromARGB(255, 6, 6, 6),
+                color: const Color.fromARGB(255, 15, 216, 166),
                 fontSize: 30,
                 fontFamily: "Lobster",
                 fontWeight: FontWeight.bold,

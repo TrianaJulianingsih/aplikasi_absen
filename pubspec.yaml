@@ -93,7 +93,7 @@ fonts:
         - asset: assets/fonts/Roboto_Condensed-Regular.ttf
     - family: Lobster
       fonts:
-        - asset: assets/fonts/LobsterTwo-Bold.ttf
+        - asset: assets/fonts/LobsterBold.ttf
     - family: Gilroy_Bold
       fonts:
         - asset: assets\fonts\Gilroy-Bold.ttf

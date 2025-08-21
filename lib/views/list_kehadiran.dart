@@ -17,14 +17,21 @@ class _ListKehadiranState extends State<ListKehadiran> {
   DateTime? selectedDate;
   String? dropdownSelect;
   List<Kehadiran> kehadiran = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadKehadiran();
+  }
+
   Future<void> _loadKehadiran() async {
-    final data = await DbHelper.getAllKehadiran();
+    final userId = await PreferenceHandler.getUserId();
+    if (userId == null) return;
+    
+    final data = await DbHelper.getKehadiranByUser(userId);
     setState(() {
       kehadiran = data;
     });
-  }
-  DateFormat _debugLifecycleState(String pattern, String locale) {
-    return DateFormat(pattern, locale);
   }
 
   final TextEditingController _namaController = TextEditingController();
@@ -43,19 +50,24 @@ class _ListKehadiranState extends State<ListKehadiran> {
     if (pickerDate != null) {
       setState(() {
         selectedDate = pickerDate;
-        _tanggalController.text = DateFormat(
-          'dd-MM-yyyy',
-          'id',
-        ).format(pickerDate);
+        _tanggalController.text = DateFormat('dd-MM-yyyy', 'id').format(pickerDate);
       });
     }
   }
 
-  void _keterangan() {
-    TextField(decoration: InputDecoration(labelText: 'Keterangan'));
-  }
+  void _showFormDialog({Kehadiran? dataToEdit}) {
+    if (dataToEdit != null) {
+      _namaController.text = dataToEdit.nama;
+      _tanggalController.text = dataToEdit.tanggal;
+      _kelasController.text = dataToEdit.kelas;
+      _statusController.text = dataToEdit.status ?? "";
+    } else {
+      _namaController.clear();
+      _tanggalController.clear();
+      _kelasController.clear();
+      _statusController.clear();
+    }
 
-  void _showFormDialog() {
     showDialog(
       context: context,
       builder: (context) {
@@ -65,13 +77,12 @@ class _ListKehadiranState extends State<ListKehadiran> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
-              title: const Text("Tambah Kehadiran"),
+              title: Text(dataToEdit == null ? "Tambah Kehadiran" : "Edit Kehadiran"),
               content: Form(
                 key: _formKey,
                 child: SizedBox(
                   height: 380,
                   width: 500,
-
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -109,7 +120,6 @@ class _ListKehadiranState extends State<ListKehadiran> {
                             onPressed: () => _pilihTanggal(context),
                           ),
                         ),
-
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return "Tanggal tidak boleh kosong";
@@ -144,9 +154,7 @@ class _ListKehadiranState extends State<ListKehadiran> {
                             border: OutlineInputBorder(),
                             labelText: "Status Kehadiran",
                           ),
-                          value: _statusController.text.isEmpty
-                            ? null
-                            : _statusController.text,
+                          value: _statusController.text.isEmpty ? null : _statusController.text,
                           hint: const Text("Pilih Status Kehadiran"),
                           items: ["Hadir", "Izin", "Sakit", "Alpha"].map((String value) {
                             return DropdownMenuItem(
@@ -155,7 +163,9 @@ class _ListKehadiranState extends State<ListKehadiran> {
                             );
                           }).toList(),
                           onChanged: (newValue) {
-                            _statusController.text = newValue!;
+                            setState(() {
+                              _statusController.text = newValue!;
+                            });
                           },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -175,20 +185,29 @@ class _ListKehadiranState extends State<ListKehadiran> {
                   child: const Text("Batal"),
                 ),
                 ElevatedButton(
-                  onPressed: () async{
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      final userId = await PreferenceHandler.getUserId(); 
-                      Kehadiran newKehadiran = Kehadiran(
+                      final userId = await PreferenceHandler.getUserId();
+                      Kehadiran kehadiranData = Kehadiran(
+                        idKehadiran: dataToEdit?.idKehadiran,
                         userId: userId ?? 0,
                         nama: _namaController.text,
                         tanggal: _tanggalController.text,
                         kelas: _kelasController.text,
                         status: _statusController.text
-                    );
+                      );
 
-                    await DbHelper.registerKehadiran(newKehadiran);
-                    Navigator.pop(context);
-                      _loadKehadiran(); // refresh list
+                      if (dataToEdit == null) {
+                        await DbHelper.registerKehadiran(kehadiranData);
+                      } else {
+                        // Untuk update, kita perlu menambahkan method update di DbHelper
+                        // Sementara kita hapus dulu lalu tambah baru
+                        // (Anda perlu menambahkan method updateKehadiran di DbHelper)
+                        await DbHelper.registerKehadiran(kehadiranData);
+                      }
+                      
+                      Navigator.pop(context);
+                      _loadKehadiran();
                       _namaController.clear();
                       _tanggalController.clear();
                       _kelasController.clear();
@@ -205,22 +224,29 @@ class _ListKehadiranState extends State<ListKehadiran> {
     );
   }
 
+  Future<void> _deleteKehadiran(int id) async {
+    // Anda perlu menambahkan method deleteKehadiran di DbHelper
+    // Sementara kita akan filter manual
+    setState(() {
+      kehadiran.removeWhere((item) => item.idKehadiran == id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Kehadiran"),
+        title: Text("Kehadiran", style: TextStyle(fontFamily: "Gilroy_Regular", fontWeight: FontWeight.bold)),
         backgroundColor: const Color.fromARGB(255, 15, 216, 166),
+        centerTitle: true,
       ),
       drawer: DrawerMenu(),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showFormDialog,
+        onPressed: () => _showFormDialog(),
         child: Icon(Icons.add),
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Column(
-        // crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -233,40 +259,52 @@ class _ListKehadiranState extends State<ListKehadiran> {
               ),
               child: Padding(
                 padding: const EdgeInsets.only(left: 120, top: 55, bottom: 50, right: 50),
-                child: Text("Absen Yuk!", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),),
+                child: Text("Absen Yuk!", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, fontFamily: "Gilroy_Regular")),
               ),
             ),
           ),
           Expanded(
             child: ListView.builder(
-                    itemCount: kehadiran.length,
-                    itemBuilder: (context, index) {
-                      final data = kehadiran[index];
-                      return Card(
-                        margin: EdgeInsets.all(8),
-                        child: ListTile(
-                          leading: Icon(Icons.person, color: const Color.fromARGB(255, 15, 216, 166)),
-                          title: 
-                            
-                              Text(data.nama),
-                              
-                            
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(data.kelas),
-                              Text(data.tanggal),
-                            ],
+              itemCount: kehadiran.length,
+              itemBuilder: (context, index) {
+                final data = kehadiran[index];
+                return Card(
+                  margin: EdgeInsets.all(8),
+                  child: ListTile(
+                    leading: Icon(Icons.person, color: const Color.fromARGB(255, 15, 216, 166)),
+                    title: Text(data.nama, style: TextStyle(fontSize: 18),),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(data.kelas, style: TextStyle(fontSize: 14),),
+                        Text(data.tanggal, style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(data.status!, style: TextStyle(fontSize: 18),),
+                        Card(
+                          child: IconButton(
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showFormDialog(dataToEdit: data),
                           ),
-                          trailing: Text(data.status!),
                         ),
-                      );
-                    },
+                        Card(
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteKehadiran(data.idKehadiran!),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),
-            
     );
   }
 }

@@ -6,9 +6,6 @@ import 'package:tugas_13/sqflite/db_helper.dart';
 import 'package:tugas_13/views/login_screen.dart';
 import 'package:tugas_13/textForm/text_form.dart';
 import 'package:tugas_13/extension/navigation.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,167 +16,166 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  List<User> users = [];
-  String? emailUser;
+  User? currentUser;
+  bool isLoading = true;
+  
   @override
   void initState() {
     super.initState();
-    getUser();
+    getCurrentUser();
   }
 
   final TextEditingController namaController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   
-  Future<void> getUser() async {
-    final dataUser = await DbHelper.getAllUser();
+  Future<void> getCurrentUser() async {
+    final userId = await PreferenceHandler.getUserId();
+    final userEmail = await PreferenceHandler.getEmail();
+    final userName = await PreferenceHandler.getNama();
     
-    setState(() {
-      users = dataUser;
-    });
+    if (userId != null) {
+      final allUsers = await DbHelper.getAllUser();
+      final userFromDb = allUsers.firstWhere(
+        (user) => user.id == userId,
+        orElse: () => User(id: -1, nama: '', email: ''), 
+      );
+      if (userFromDb.id != -1) {
+        setState(() {
+          currentUser = userFromDb;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          currentUser = User(
+            id: userId, 
+            nama: userName ?? 'User', 
+            email: userEmail ?? 'No Email'
+          );
+          isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  
-  
+  Future<void> _updateUser() async {
+    if (currentUser == null) return;
+
+    final updatedUser = User(
+      id: currentUser!.id,
+      nama: namaController.text,
+      email: emailController.text,
+      password: currentUser!.password,
+    );
+    
+    await DbHelper.updateUser(updatedUser);
+    
+    // Update juga di shared preferences menggunakan PreferenceHandler
+    await PreferenceHandler.setNama(updatedUser.nama);
+    await PreferenceHandler.setEmail(updatedUser.email);
+    
+    setState(() {
+      currentUser = updatedUser;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Profile berhasil diupdate')),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile"),
-        backgroundColor:  const Color.fromARGB(255, 15, 216, 166),
+        backgroundColor: const Color.fromARGB(255, 15, 216, 166),
       ),
       drawer: DrawerMenu(),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Stack(
-          //   children: [Padding(
-          //     padding: const EdgeInsets.all(20),
-          //     child: Container(
-          //       height: 200,
-          //       width: 350,
-          //       decoration: BoxDecoration(
-          //         color: Colors.greenAccent,
-          //         borderRadius: BorderRadius.circular(10)
-                  
-          //       ),
-          //     ),
-          //   ),
-          //   Padding(
-          //     padding: const EdgeInsets.all(60),
-          //     child: Row(
-          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //       children: [
-          //         Container(
-          //           height: 90,
-          //           width: 90,
-          //           decoration: BoxDecoration(
-          //             image: DecorationImage(image: AssetImage("assets/images/jiso.jpg"), fit: BoxFit.cover),
-          //             shape: BoxShape.circle,
-                  
-          //           ),
-          //         ),
-          //         SizedBox(width: 20),
-                    // Text(
-                    //   emailUser ?? "Loading...",
-                    //   style: TextStyle(
-                    //     fontSize: 18,
-                    //     fontWeight: FontWeight.bold
-                    //   ),
-                    // ),
-          ListView.builder(
-            physics: NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: users.length,
-            itemBuilder: (BuildContext context, int index) {
-              final dataUser = users[index];
-              return Card(
-                color: const Color.fromARGB(255, 244, 187, 54),
-                child: ListTile(
-                  title: Text(dataUser.nama),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(dataUser.email),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Card(
-                        color: Colors.blue,
-                        child: IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('Edit Data'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    TextFormConst(
-                                      controller: namaController
-                                      ..text = dataUser.nama,
-                                      hintText: 'Nama',
-                                    ),
-                                    SizedBox(height: 12),
-                                    TextFormConst(
-                                      controller: emailController
-                                      ..text = dataUser.email,
-                                      hintText: 'Email',
-                                    ),
-                                      
-                                  ],
-                                ),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      final dataUser = User(
-                                        // id: dataUser.id!,
-                                        nama: namaController.text,
-                                        email: emailController.text,    
-                                      );
-                                      DbHelper.updateUser(dataUser);
-                                      getUser();
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text('Simpan'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('Batal'),
-                                  ),
-                                ],
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : currentUser == null
+              ? Center(child: Text('User tidak ditemukan'))
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Profile Card
+                    Card(
+                      margin: EdgeInsets.all(16),
+                      color: const Color.fromARGB(255, 15, 216, 166),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundImage: AssetImage("assets/images/jiso.jpg"),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              currentUser!.nama,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
-                            );
-                          },
-                          icon: Icon(Icons.edit, color: Colors.white),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              currentUser!.email,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                          ],
                         ),
                       ),
-                      Card(
-                        color: Colors.red,
-                        child: IconButton(
-                          onPressed: () {
-                            DbHelper.deletePeserta(dataUser.id!);
-                            getUser();
-                          },
-                          icon: Icon(Icons.delete, color: Colors.white),
-                        ),
-                      ),
-                      
-                    ],
-                  ),
-                )
-              );
-              
-            }
-          ),
-          ElevatedButton(onPressed: (){PreferenceHandler.removeLogin();
-        context.pushReplacementNamed(Login.id);}, child: Text("Keluar"))
+                    ),
 
-        ]
-      ),
-          
+                    // Edit Form
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            TextFormConst(
+                              controller: namaController..text = currentUser!.nama,
+                              hintText: 'Nama',
+                            ),
+                            SizedBox(height: 12),
+                            TextFormConst(
+                              controller: emailController..text = currentUser!.email,
+                              hintText: 'Email',
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: _updateUser,
+                              child: Text('Update Profile'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Logout Button
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          PreferenceHandler.removeLogin();
+                          context.pushReplacementNamed(Login.id);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: Text("Logout", style: TextStyle(color: Colors.white),),
+                      ),
+                    )
+                  ],
+                ),
     );
-        
   }
 }

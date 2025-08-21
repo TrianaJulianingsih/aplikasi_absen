@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _loadData(); 
-    _loadUserData();// ambil data dari DB saat pertama kali masuk
+    _loadUserData();
   }
 
   Future<void> _loadData() async {
@@ -45,9 +45,9 @@ class _HomeState extends State<Home> {
 
 
   Future<void> _loadUserData() async {
-    final nama = await PreferenceHandler.getNama(); // Ambil nama, bukan email
+    final nama = await PreferenceHandler.getNama(); 
     setState(() {
-      userName = nama ?? "User"; // Default ke "User" jika null
+      userName = nama ?? "User"; 
     });
   }
   @override
@@ -68,15 +68,14 @@ class _HomeState extends State<Home> {
           children: [
             const Padding(
               padding: EdgeInsets.all(10),
-              child: Text("Selamat Datang, "),
+              child: Text("Selamat Datang, ", style: TextStyle(fontFamily: "Gilroy_Bold", fontSize: 20,),),
             ),
 
-            // --- Card Profil ---
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: SizedBox(
                 height: 150,
-                width: 330,
+                width: 350,
                 child: Card(
                   color: const Color.fromARGB(255, 15, 216, 166),
                   child: Row(
@@ -103,18 +102,18 @@ class _HomeState extends State<Home> {
                             Text(
                               userName ?? "Loading...", // Tampilkan NAMA user
                               style: TextStyle(
-                                color: Colors.white, 
-                                fontFamily: "Montserrat",
+                                color: Colors.black, 
+                                fontFamily: "Gilroy_Bold",
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold
                               ),
                             ),
                             SizedBox(height: 10),
                             Text(
-                              "Admin", 
+                              "Siswa", 
                               style: TextStyle(
-                                color: Colors.white, 
-                                fontFamily: "Montserrat",
+                                color: Colors.black, 
+                                fontFamily: "Gilroy_Bold",
                                 fontSize: 14
                               ),
                             ),

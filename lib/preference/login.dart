@@ -5,6 +5,7 @@ class PreferenceHandler {
   static const String namaKey = "nama";
   static const String emailKey = "email";
   static const String userIdKey = "userId";
+  
   static void saveLogin(int userId, String email, String nama) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(loginKey, true);
@@ -33,29 +34,22 @@ class PreferenceHandler {
     return prefs.getString(emailKey);
   }
 
-  // static Future<String?> getKelas() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   return prefs.getString(kelasKey);
-  // }
+  // Tambahkan method setter untuk update data
+  static Future<void> setNama(String nama) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(namaKey, nama);
+  }
 
-  // static Future<String?> getFoto() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   return prefs.getString(fotoKey);
-  // }
-
-  // static void setKelas(String kelas) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.setString(kelasKey, kelas);
-  // }
-
-  // // Setter khusus foto
-  // static void setFoto(String foto) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.setString(fotoKey, foto);
-  // }
+  static Future<void> setEmail(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(emailKey, email);
+  }
 
   static void removeLogin() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(loginKey);
+    await prefs.remove(userIdKey);
+    await prefs.remove(namaKey);
+    await prefs.remove(emailKey);
   }
 }

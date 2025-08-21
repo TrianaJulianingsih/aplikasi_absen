@@ -13,8 +13,18 @@ class LaporanScreen extends StatefulWidget {
 
 class _LaporanScreenState extends State<LaporanScreen> {
   final List<String> bulan = [
-    "Januari","Februari","Maret","April","Mei","Juni",
-    "Juli","Agustus","September","Oktober","November","Desember"
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   List<Kehadiran> laporan = [];
@@ -30,39 +40,50 @@ class _LaporanScreenState extends State<LaporanScreen> {
   }
 
   Future<void> _loadLaporan(String bulan) async {
-  final userId = await PreferenceHandler.getUserId();
-  if (userId == null) return;
+    final userId = await PreferenceHandler.getUserId();
+    if (userId == null) return;
 
-  final data = await DbHelper.getKehadiranByUserAndMonth(userId, bulan);
+    final data = await DbHelper.getKehadiranByUserAndMonth(userId, bulan);
 
-  int hadir = 0;
-  int sakit = 0;
-  int izin = 0;
-  int alpha = 0;
+    int hadir = 0;
+    int sakit = 0;
+    int izin = 0;
+    int alpha = 0;
 
-  for (var d in data) {
-    switch (d.status) {
-      case "Hadir": hadir++; break;
-      case "Sakit": sakit++; break;
-      case "Izin": izin++; break;
-      case "Alpha": alpha++; break;
+    for (var d in data) {
+      switch (d.status) {
+        case "Hadir":
+          hadir++;
+          break;
+        case "Sakit":
+          sakit++;
+          break;
+        case "Izin":
+          izin++;
+          break;
+        case "Alpha":
+          alpha++;
+          break;
+      }
     }
+
+    setState(() {
+      laporan = data;
+      totalHadir = hadir;
+      totalSakit = sakit;
+      totalIzin = izin;
+      totalAlpha = alpha;
+    });
   }
-
-  setState(() {
-    laporan = data;
-    totalHadir = hadir;
-    totalSakit = sakit;
-    totalIzin = izin;
-    totalAlpha = alpha;
-  });
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Laporan"), backgroundColor: const Color.fromARGB(255, 15, 216, 166),),
+      appBar: AppBar(
+        title: const Text("Laporan", style: TextStyle(fontFamily:"Gilroy_Regular", fontWeight: FontWeight.bold),),
+        backgroundColor: const Color.fromARGB(255, 15, 216, 166),
+        centerTitle: true,
+      ),
       drawer: const DrawerMenu(),
       body: Column(
         children: [
@@ -83,7 +104,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
                       width: 120,
                       child: ElevatedButton(
                         onPressed: () {
-                          String bulanParam = (index + 1).toString().padLeft(2, "0");
+                          String bulanParam = (index + 1).toString().padLeft(
+                            2,
+                            "0",
+                          );
                           _loadLaporan(bulanParam);
                         },
                         style: ElevatedButton.styleFrom(
@@ -92,9 +116,9 @@ class _LaporanScreenState extends State<LaporanScreen> {
                             borderRadius: BorderRadius.circular(20),
                             side: BorderSide(
                               color: Colors.greenAccent,
-                              width: 2
-                            )
-                          )
+                              width: 2,
+                            ),
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -119,14 +143,20 @@ class _LaporanScreenState extends State<LaporanScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Card(
-              color:  Colors.greenAccent,
+              color: Colors.greenAccent,
               child: SizedBox(
                 height: 200,
                 width: 400,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Rekap Kehadiran", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    Text(
+                      "Rekap Kehadiran",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
                     SizedBox(height: 20),
                     Text("Total Hadir: $totalHadir"),
                     Text("Total Sakit: $totalSakit"),
@@ -140,20 +170,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
           // Riwayat
           Expanded(
-            child: ListView.builder(
-              itemCount: laporan.length,
-              itemBuilder: (context, index) {
-                final data = laporan[index];
-                return Card(
-                  color: Colors.greenAccent,
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(data.nama),
-                    subtitle: Text("Kelas: ${data.kelas} | Tanggal: ${data.tanggal}"),
-                    trailing: Text(data.status ?? "-"),
-                  ),
-                );
-              },
+            child: Center(
+              child: Text("Lihat riwayat kehadiran di menu Kehadiran"),
             ),
           ),
         ],
