@@ -37,7 +37,7 @@ class _MyWidgetState extends State<Login> {
         SnackBar(content: Text("Selamat datang, ${userData.nama}")),
       );
       PreferenceHandler.saveLogin(userData.id!, userData.email, userData.nama);
-      Navigator.pushReplacementNamed(context, "/home");
+      Navigator.pushReplacementNamed(context, "/buttomNav");
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Email atau Password salah")),
