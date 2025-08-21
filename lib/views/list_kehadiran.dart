@@ -200,9 +200,6 @@ class _ListKehadiranState extends State<ListKehadiran> {
                       if (dataToEdit == null) {
                         await DbHelper.registerKehadiran(kehadiranData);
                       } else {
-                        // Untuk update, kita perlu menambahkan method update di DbHelper
-                        // Sementara kita hapus dulu lalu tambah baru
-                        // (Anda perlu menambahkan method updateKehadiran di DbHelper)
                         await DbHelper.registerKehadiran(kehadiranData);
                       }
                       
@@ -225,11 +222,36 @@ class _ListKehadiranState extends State<ListKehadiran> {
   }
 
   Future<void> _deleteKehadiran(int id) async {
-    // Anda perlu menambahkan method deleteKehadiran di DbHelper
-    // Sementara kita akan filter manual
-    setState(() {
-      kehadiran.removeWhere((item) => item.idKehadiran == id);
-    });
+    await DbHelper.deleteKehadiran(id);
+    _loadKehadiran();                   
+  }
+
+
+  Future<void> _confirmDelete(int id) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Hapus"),
+          content: const Text("Apakah kamu yakin ingin menghapus data ini?"),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context); 
+                await _deleteKehadiran(id); 
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Hapus"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -293,7 +315,7 @@ class _ListKehadiranState extends State<ListKehadiran> {
                         Card(
                           child: IconButton(
                             icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteKehadiran(data.idKehadiran!),
+                            onPressed: () =>  _confirmDelete(data.idKehadiran!),
                           ),
                         ),
                       ],

@@ -32,15 +32,6 @@ class DbHelper {
     );
   }
 
-  // static Future<void> registerKehadiran(Kehadiran kehadiran) async {
-  //   final db = await databaseHelper();
-  //   await db.insert(
-  //     'kehadiran',
-  //     kehadiran.toMap(),
-  //     conflictAlgorithm: ConflictAlgorithm.replace,
-  //   );
-  // }
-
   static Future<void> registerKehadiran(Kehadiran kehadiran) async {
   final db = await databaseHelper();
   String? email = await PreferenceHandler.getEmail();
@@ -48,7 +39,6 @@ class DbHelper {
   final data = kehadiran.toMap();
   data['email'] = email;
 
-  // Jika idKehadiran ada, maka update, jika tidak insert baru
   if (kehadiran.idKehadiran != null) {
     await db.update(
       'kehadiran',
@@ -104,43 +94,6 @@ class DbHelper {
     }
     return null;
   }
-  // static Future<Kehadiran?> readKehadiran(String tanggal, String status) async {
-  //   final db = await databaseHelper();
-  //   final List<Map<String, dynamic>> results = await db.query(
-  //     'kehadiran',
-  //     where: 'tanggal = ? AND status = ? ',
-  //     whereArgs: [tanggal, status],
-  //   );
-
-  //   if (results.isNotEmpty) {
-  //     return Kehadiran.fromMap(results.first);
-  //   }
-  //   return null;
-  // }
-
-  // static Future<List<Kehadiran>> getKehadiranByBulan(String bulan) async {
-  //   final db = await databaseHelper();
-  //   final List<Map<String, dynamic>> results = await db.query(
-  //     'kehadiran',
-  //     where: 'substr(tanggal, 4, 2) = ?',
-  //     whereArgs: [bulan]
-  //   );
-
-  //   return results.map((e) => Kehadiran.fromMap(e)).toList();
-  // }
-
-  // static Future<List<Kehadiran>> getKehadiranByBulan(String bulan) async {
-  //   final db = await databaseHelper();
-  //   String? email = await PreferenceHandler.getEmail();
-
-  //   final List<Map<String, dynamic>> results = await db.query(
-  //     'kehadiran',
-  //     where: 'substr(tanggal, 4, 2) = ? AND email = ?',
-  //     whereArgs: [bulan, email],
-  //   );
-
-  //   return results.map((e) => Kehadiran.fromMap(e)).toList();
-  // }
 
   static Future<List<Kehadiran>> getKehadiranByUser(int userId) async {
     final db = await databaseHelper();
