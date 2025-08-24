@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter/material.dart';
 import 'package:tugas_13/dashboard/buttom_nav.dart';
 import 'package:tugas_13/preference/login.dart';
@@ -27,7 +28,7 @@ class _MyWidgetState extends State<Login> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Email dan Password tidak boleh kosong")),
       );
-      setState(() => isLoading = false);
+      setState(() => isLoading = true);
 
       return;
     }
@@ -37,7 +38,7 @@ class _MyWidgetState extends State<Login> {
         SnackBar(content: Text("Selamat datang, ${userData.nama}")),
       );
       PreferenceHandler.saveLogin(userData.id!, userData.email, userData.nama);
-      Navigator.pushReplacementNamed(context, "/buttomNav");
+      Navigator.pushReplacementNamed(context, ButtomNav.id);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Email atau Password salah")),
@@ -214,7 +215,53 @@ class _MyWidgetState extends State<Login> {
                     width: 327,
                     child: ElevatedButton(
                       onPressed: () {
-                        login();
+                        if(_formKey.currentState!.validate()){
+                          login();
+                        }else{
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text("Login failed"),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text("Email or password is invalid"),
+                                    SizedBox(height: 20),
+                                    // Image.asset(
+                                    //   'assets/images/rendang.jpeg',
+                                    //   width: 90,
+                                    //   height: 100,
+                                    //   fit: BoxFit.cover,
+                                    // ),
+                                    Lottie.asset(
+                                      'assets/animations/false.json',
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    child: Text("Batal"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text("Ok"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                  
+                        }
+                        
                         
                         //Error dan sukses menggunakan ScaffoldMessenger dan formKey
                         // if (_formKey.currentState!.validate()) {

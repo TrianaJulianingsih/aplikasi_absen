@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tugas_13/dashboard/home.dart';
+import 'package:tugas_13/dashboard/buttom_nav.dart';
+import 'package:tugas_13/dashboard/buttom_nav.dart';
 import 'package:tugas_13/preference/login.dart';
 import 'package:tugas_13/utils/app_image.dart';
 import 'package:tugas_13/views/login_screen.dart';
@@ -26,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(Duration(seconds: 3)).then((value) async {
       print(isLogin);
       if (isLogin == true) {
-        context.pushReplacementNamed(Home.id);
+        context.pushReplacementNamed(ButtomNav.id);
       } else {
         context.push(Login());
       }
